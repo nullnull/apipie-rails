@@ -71,6 +71,7 @@ module Apipie
           },
           basePath: Apipie.api_base_url(version),
           consumes: [],
+          produces: ['application/json'], # TBD
           paths: {},
           definitions: {},
           tags: [],
