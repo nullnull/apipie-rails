@@ -455,6 +455,7 @@ module Apipie
     # The output is slightly different when the parameter is inside a schema block.
     #--------------------------------------------------------------------------
     def swagger_atomic_param(param_desc, in_schema, name, allow_nulls)
+      allow_nulls = param_desc.allow_nil
       def save_field(entry, openapi_key, v, apipie_key=openapi_key, translate=false)
         if v.key?(apipie_key)
           if translate
