@@ -190,9 +190,11 @@ namespace :apipie do
   end
 
   def generate_swagger_using_args(args, out)
-    args.with_defaults(:version => Apipie.configuration.default_version,
-                       :swagger_content_type_input => :form_data,
-                       :filename_suffix => nil)
+    args.with_defaults(
+      :version => Apipie.configuration.default_version,
+      :swagger_content_type_input => :form_data,
+      :filename_suffix => nil
+    )
     Apipie.configuration.swagger_content_type_input = args[:swagger_content_type_input].to_sym
     count = 0
 
