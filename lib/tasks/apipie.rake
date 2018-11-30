@@ -198,7 +198,7 @@ namespace :apipie do
     Apipie.configuration.swagger_content_type_input = args[:swagger_content_type_input].to_sym unless args[:swagger_content_type_input].nil?
     count = 0
 
-    sfx = args[:filename_suffix] || "_#{args[:swagger_content_type_input]}"
+    sfx = args[:filename_suffix] || "_#{Apipie.configuration.swagger_content_type_input}"
 
     paths = []
 
