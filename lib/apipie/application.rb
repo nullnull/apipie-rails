@@ -271,7 +271,7 @@ module Apipie
       # if resource_name is blank, take just resources which have some methods because
       # we dont want to show eg ApplicationController as resource
       # otherwise, take only the specified resource
-      _resources = resource_descriptions[version].inject({}) do |result, (k,v)|
+      resources = resource_descriptions[version].inject({}) do |result, (k,v)|
          if resource_name.blank?
            result[k] = v unless v._methods.blank?
          else
@@ -280,7 +280,7 @@ module Apipie
          result
        end
 
-      @swagger_generator.generate_from_resources(version,_resources, method_name, lang, clear_warnings)
+      @swagger_generator.generate_from_resources(version, resources, method_name, lang, clear_warnings)
     end
 
     def to_json(version, resource_name, method_name, lang)
