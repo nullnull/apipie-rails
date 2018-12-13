@@ -104,13 +104,13 @@ module Apipie
     #--------------------------------------------------------------------------
 
     def add_resources(resources)
-      resources.each do |resource_name, resource_defs|
-        add_resource_description(resource_name, resource_defs)
-        add_resource_methods(resource_name, resource_defs)
+      resources.each do |_, resource_defs|
+        add_resource_description(resource_defs)
+        add_resource_methods(resource_defs)
       end
     end
 
-    def add_resource_methods(resource_name, resource_defs)
+    def add_resource_methods(resource_defs)
       resource_defs._methods.each do |apipie_method_name, apipie_method_defs|
         add_ruby_method(@paths, apipie_method_defs)
       end
@@ -180,7 +180,7 @@ module Apipie
       resource._id
     end
 
-    def add_resource_description(resource_name, resource)
+    def add_resource_description(resource)
       if resource._full_description
         @tags << {
             name: tag_name_for_resource(resource),
