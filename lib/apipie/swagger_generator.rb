@@ -597,6 +597,14 @@ module Apipie
             schema = new_schema
           end
           param_defs[param_desc.name.to_sym] = schema if !schema.nil?
+        elsif !param_desc.is_array_of.nil?
+          dsl_data_params = @apipie.get_param_group(param_desc.method_description.resource.controller, param_desc.is_array_of).call
+          params_array_for_param_group ||= dsl_data_params.map do |args|
+            Apipie::ParamDescription.from_dsl_data(param_desc.method_description, args)
+          end.compact
+          ref_to = gen_referenced_block_from_params_array(param_desc.is_array_of, params_array_for_param_group, allow_nulls=false)
+          schema = {'$ref' =>  ref_to }
+          param_defs[param_desc.name.to_sym] = schema if !schema.nil?
         else
           param_defs[param_desc.name.to_sym] = swagger_atomic_param(param_desc, true, nil, allow_nulls)
         end
