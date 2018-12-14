@@ -620,7 +620,8 @@ module Apipie
     #--------------------------------------------------------------------------
 
     def body_allowed_for_current_method
-      !(['get', 'head'].include?(@current_http_method))
+      true
+      # !(['get', 'head'].include?(@current_http_method))
     end
 
     def swagger_params_array_for_method(method, path)
