@@ -9,7 +9,7 @@ module Apipie
   class ParamDescription
 
     attr_reader :method_description, :name, :desc, :allow_nil, :allow_blank, :validator, :options, :metadata, :show, :as, :validations, :response_only, :request_only
-    attr_reader :additional_properties, :is_array, :is_array_of
+    attr_reader :additional_properties, :is_array, :is_array_of, :is_alias_of
     attr_accessor :parent, :required
 
     alias_method :response_only?, :response_only
@@ -87,6 +87,9 @@ module Apipie
           @is_array = true
           @is_array_of = validator[:array_of]
           @validator = Validator::BaseValidator.find(self, Array, @options, block)
+        elsif validator.is_a?(Symbol) && Validator::BaseValidator.find(self, validator, @options, block).nil?
+          @is_alias_of = validator
+          @validator = Validator::BaseValidator.find(self, Hash, @options, block)
         else
           if (validator != Hash) && (validator.is_a? Hash) && (validator[:array_of])
             @is_array = true
