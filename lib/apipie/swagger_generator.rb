@@ -71,6 +71,7 @@ module Apipie
           },
           basePath: Apipie.api_base_url(version),
           consumes: [],
+          produces: ['application/json'], # TBD
           paths: {},
           definitions: {},
           tags: [],
@@ -103,13 +104,13 @@ module Apipie
     #--------------------------------------------------------------------------
 
     def add_resources(resources)
-      resources.each do |resource_name, resource_defs|
-        add_resource_description(resource_name, resource_defs)
-        add_resource_methods(resource_name, resource_defs)
+      resources.each do |_, resource_defs|
+        add_resource_description(resource_defs)
+        add_resource_methods(resource_defs)
       end
     end
 
-    def add_resource_methods(resource_name, resource_defs)
+    def add_resource_methods(resource_defs)
       resource_defs._methods.each do |apipie_method_name, apipie_method_defs|
         add_ruby_method(@paths, apipie_method_defs)
       end
@@ -179,7 +180,7 @@ module Apipie
       resource._id
     end
 
-    def add_resource_description(resource_name, resource)
+    def add_resource_description(resource)
       if resource._full_description
         @tags << {
             name: tag_name_for_resource(resource),
@@ -455,6 +456,7 @@ module Apipie
     # The output is slightly different when the parameter is inside a schema block.
     #--------------------------------------------------------------------------
     def swagger_atomic_param(param_desc, in_schema, name, allow_nulls)
+      allow_nulls = param_desc.allow_nil
       def save_field(entry, openapi_key, v, apipie_key=openapi_key, translate=false)
         if v.key?(apipie_key)
           if translate
@@ -595,6 +597,27 @@ module Apipie
             schema = new_schema
           end
           param_defs[param_desc.name.to_sym] = schema if !schema.nil?
+        elsif !param_desc.is_array_of.nil?
+          dsl_data_params = @apipie.get_param_group(param_desc.method_description.resource.controller, param_desc.is_array_of).call
+          params_array_for_param_group ||= dsl_data_params.map do |args|
+            Apipie::ParamDescription.from_dsl_data(param_desc.method_description, args)
+          end.compact
+          ref_to = gen_referenced_block_from_params_array(param_desc.is_array_of, params_array_for_param_group, allow_nulls=false)
+          schema = {
+            'type': 'array',
+            'items': {
+              '$ref' =>  ref_to
+            }
+          }
+          param_defs[param_desc.name.to_sym] = schema if !schema.nil?
+        elsif !param_desc.is_alias_of.nil?
+          dsl_data_params = @apipie.get_param_group(param_desc.method_description.resource.controller, param_desc.is_alias_of).call
+          params_array_for_param_group ||= dsl_data_params.map do |args|
+            Apipie::ParamDescription.from_dsl_data(param_desc.method_description, args)
+          end.compact
+          ref_to = gen_referenced_block_from_params_array(param_desc.is_alias_of, params_array_for_param_group, allow_nulls=false)
+          schema = { '$ref' =>  ref_to }
+          param_defs[param_desc.name.to_sym] = schema if !schema.nil?
         else
           param_defs[param_desc.name.to_sym] = swagger_atomic_param(param_desc, true, nil, allow_nulls)
         end
@@ -610,7 +633,8 @@ module Apipie
     #--------------------------------------------------------------------------
 
     def body_allowed_for_current_method
-      !(['get', 'head'].include?(@current_http_method))
+      true
+      # !(['get', 'head'].include?(@current_http_method))
     end
 
     def swagger_params_array_for_method(method, path)

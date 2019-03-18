@@ -9,7 +9,7 @@ module Apipie
   class ParamDescription
 
     attr_reader :method_description, :name, :desc, :allow_nil, :allow_blank, :validator, :options, :metadata, :show, :as, :validations, :response_only, :request_only
-    attr_reader :additional_properties, :is_array
+    attr_reader :additional_properties, :is_array, :is_array_of, :is_alias_of
     attr_accessor :parent, :required
 
     alias_method :response_only?, :response_only
@@ -83,15 +83,24 @@ module Apipie
       action_awareness
 
       if validator
-        if (validator != Hash) && (validator.is_a? Hash) && (validator[:array_of])
+        if validator.is_a?(Hash) && validator[:array_of] && validator[:array_of].is_a?(Symbol)
           @is_array = true
-          rest_of_options = validator
-          validator = validator[:array_of]
-          options.merge!(rest_of_options.select{|k,v| k != :array_of })
-          raise "an ':array_of =>' validator is allowed exclusively on response-only fields" unless @response_only
+          @is_array_of = validator[:array_of]
+          @validator = Validator::BaseValidator.find(self, Array, @options, block)
+        elsif validator.is_a?(Symbol) && Validator::BaseValidator.find(self, validator, @options, block).nil?
+          @is_alias_of = validator
+          @validator = Validator::BaseValidator.find(self, Hash, @options, block)
+        else
+          if (validator != Hash) && (validator.is_a? Hash) && (validator[:array_of])
+            @is_array = true
+            rest_of_options = validator
+            validator = validator[:array_of]
+            options.merge!(rest_of_options.select{|k,v| k != :array_of })
+            raise "an ':array_of =>' validator is allowed exclusively on response-only fields" unless @response_only
+          end
+          @validator = Validator::BaseValidator.find(self, validator, @options, block)
+          raise "Validator for #{validator} not found." unless @validator
         end
-        @validator = Validator::BaseValidator.find(self, validator, @options, block)
-        raise "Validator for #{validator} not found." unless @validator
       end
 
       @validations = Array(options[:validations]).map {|v| concern_subst(Apipie.markup_to_html(v)) }

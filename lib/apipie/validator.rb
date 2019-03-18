@@ -127,6 +127,10 @@ module Apipie
           'hash'
         elsif @type.ancestors.include? Array
           'array'
+        elsif @type == Integer
+          'integer'
+        elsif @type == Float
+          'float'
         elsif @type.ancestors.include? Numeric
           'numeric'
         else
